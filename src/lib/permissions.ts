@@ -1,0 +1,17 @@
+export const permissions = {
+  dashboardView: "dashboard.view",
+  masterView: "master.view",
+  salesView: "sales.view",
+  outsourcingView: "outsourcing.view",
+  productionView: "production.view",
+  inventoryView: "inventory.view",
+  planningView: "planning.view",
+  cashFlowView: "cash-flow.view",
+  inspectionView: "inspection.view",
+  maintenanceView: "maintenance.view",
+  humanResourceView: "human-resource.view",
+  usersView: "users.view",
+  rolesView: "roles.view",
+  departmentsView: "departments.view",
+  departmentsManage: "departments.manage",
+} as const;
