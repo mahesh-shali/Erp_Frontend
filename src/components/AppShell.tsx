@@ -1,17 +1,17 @@
 "use client";
 
-import { Building2, ChevronRight, CircleDollarSign, ClipboardCheck, Factory, Handshake, LayoutDashboard, LogOut, Menu, Package, PanelLeftClose, Shield, UserRoundCog, Users, Wrench } from "lucide-react";
+import { Bot, Building2, ChevronRight, CircleDollarSign, ClipboardCheck, Factory, Handshake, LayoutDashboard, LogOut, Menu, Package, PanelLeftClose, Shield, UserRoundCog, Users, Wrench } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import { apiFetch, getSession, hasPermission, logout as logoutSession, touchSession, type AuthSession } from "@/lib/auth";
-import { permissions } from "@/lib/permissions";
 import { findActiveBranchIds, isActivePath, type SideNavItem } from "@/lib/side-nav";
 
 const sideNavCacheKey = "erp.sideNav";
 
 const icons = {
   dashboard: LayoutDashboard,
+  "ai-chat": Bot,
   master: Building2,
   sales: CircleDollarSign,
   outsourcing: Handshake,

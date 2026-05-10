@@ -1,5 +1,6 @@
 export const permissions = {
   dashboardView: "dashboard.view",
+  aiChatView: "ai-chat.view",
   masterView: "master.view",
   salesView: "sales.view",
   outsourcingView: "outsourcing.view",
