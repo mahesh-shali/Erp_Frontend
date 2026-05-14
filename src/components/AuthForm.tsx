@@ -2,17 +2,115 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { saveSession, type AuthSession } from "@/lib/auth";
 
 type Props = {
   mode: "login" | "register";
 };
 
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (options: {
+            client_id: string;
+            callback: (response: { credential?: string }) => void;
+          }) => void;
+          renderButton: (
+            parent: HTMLElement,
+            options: {
+              theme: "outline" | "filled_blue" | "filled_black";
+              size: "large" | "medium" | "small";
+              width?: number;
+              text?: "signin_with" | "signup_with" | "continue_with";
+            },
+          ) => void;
+        };
+      };
+    };
+  }
+}
+
 export function AuthForm({ mode }: Props) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  useEffect(() => {
+    if (!googleClientId || !googleButtonRef.current) {
+      return;
+    }
+    const clientId = googleClientId;
+
+    function renderGoogleButton() {
+      if (!window.google || !googleButtonRef.current) {
+        return;
+      }
+
+      googleButtonRef.current.innerHTML = "";
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response) => {
+          if (!response.credential) {
+            setError("Google did not return a credential.");
+            return;
+          }
+
+          await submitGoogleCredential(response.credential);
+        },
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        width: 360,
+        text: mode === "register" ? "signup_with" : "signin_with",
+      });
+    }
+
+    if (window.google) {
+      renderGoogleButton();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = renderGoogleButton;
+    document.head.appendChild(script);
+
+    return () => {
+      script.onload = null;
+    };
+  }, [googleClientId, mode]);
+
+  async function submitGoogleCredential(credential: string) {
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:5250"}/api/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      saveSession((await response.json()) as AuthSession);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google authentication failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -75,6 +173,14 @@ export function AuthForm({ mode }: Props) {
       <button className="button" disabled={loading} type="submit">
         {loading ? "Please wait" : mode === "login" ? "Login" : "Register"}
       </button>
+      {googleClientId && (
+        <>
+          <div className="auth-divider">
+            <span>or</span>
+          </div>
+          <div className="google-button-wrap" ref={googleButtonRef} />
+        </>
+      )}
       <div className="link-row">
         {mode === "login" ? (
           <>
