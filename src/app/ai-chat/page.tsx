@@ -19,6 +19,28 @@ type ChatResponse = {
   thread_id: string;
 };
 
+async function readJsonResponse<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get("content-type") ?? "";
+  const payload = await response.text();
+
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      payload || `AI chat returned ${response.status} ${response.statusText}.`,
+    );
+  }
+
+  const data = JSON.parse(payload) as T;
+  if (!response.ok) {
+    const detail =
+      data && typeof data === "object" && "detail" in data
+        ? String(data.detail)
+        : payload;
+    throw new Error(detail);
+  }
+
+  return data;
+}
+
 export default function AiChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -46,7 +68,7 @@ export default function AiChatPage() {
     setMessages((current) => [...current, { role: "user", content: trimmed }]);
 
     try {
-      const response = await fetch("/api/agent/chat", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,11 +77,7 @@ export default function AiChatPage() {
         body: JSON.stringify({ message: trimmed, thread_id: threadId }),
       });
 
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      const data = (await response.json()) as ChatResponse;
+      const data = await readJsonResponse<ChatResponse>(response);
       setThreadId(data.thread_id);
       setMessages((current) => [
         ...current,
