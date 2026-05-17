@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAiServiceKey } from "@/lib/ai-service-key";
 import { getAiServiceUrl } from "@/lib/ai-service-url";
 
 export async function POST(request: NextRequest) {
   const aiServiceUrl = getAiServiceUrl();
-  const aiServiceKey = process.env.AI_SERVICE_API_KEY;
+  const aiServiceKey = getAiServiceKey();
   const authorization = request.headers.get("authorization");
   const body = await request.text();
 
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
       headers: {
         "Content-Type": "application/json",
         Authorization: authorization,
-        ...(aiServiceKey ? { "X-AI-Service-Key": aiServiceKey } : {}),
+        "X-AI-Service-Key": aiServiceKey,
       },
       body,
     });
