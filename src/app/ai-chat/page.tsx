@@ -3,6 +3,8 @@
 import { Bot, Database, Send } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { getAiServiceKey } from "@/lib/ai-service-key";
+import { getAiServiceUrl } from "@/lib/ai-service-url";
 import { getSession, touchSession } from "@/lib/auth";
 import { permissions } from "@/lib/permissions";
 
@@ -68,11 +70,12 @@ export default function AiChatPage() {
     setMessages((current) => [...current, { role: "user", content: trimmed }]);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(`${getAiServiceUrl()}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.accessToken}`,
+          "X-AI-Service-Key": getAiServiceKey(),
         },
         body: JSON.stringify({ message: trimmed, thread_id: threadId }),
       });
