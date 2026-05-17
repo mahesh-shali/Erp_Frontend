@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { saveSession, type AuthSession } from "@/lib/auth";
+import { getApiUrl } from "@/lib/api-url";
 
 type Props = {
   mode: "login" | "register";
@@ -39,6 +40,33 @@ export function AuthForm({ mode }: Props) {
   const [loading, setLoading] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  const submitGoogleCredential = useCallback(
+    async (credential: string) => {
+      setError("");
+      setLoading(true);
+
+      try {
+        const response = await fetch(`${getApiUrl()}/api/auth/google`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ credential }),
+        });
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+
+        saveSession((await response.json()) as AuthSession);
+        router.push("/dashboard");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Google authentication failed.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router],
+  );
 
   useEffect(() => {
     if (!googleClientId || !googleButtonRef.current) {
@@ -86,31 +114,7 @@ export function AuthForm({ mode }: Props) {
     return () => {
       script.onload = null;
     };
-  }, [googleClientId, mode]);
-
-  async function submitGoogleCredential(credential: string) {
-    setError("");
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:5250"}/api/auth/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential }),
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      saveSession((await response.json()) as AuthSession);
-      router.push("/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Google authentication failed.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [googleClientId, mode, submitGoogleCredential]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -132,7 +136,7 @@ export function AuthForm({ mode }: Props) {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:5250"}/api/auth/${mode}`,
+        `${getApiUrl()}/api/auth/${mode}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

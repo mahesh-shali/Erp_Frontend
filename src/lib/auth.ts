@@ -1,5 +1,7 @@
 "use client";
 
+import { getApiUrl } from "@/lib/api-url";
+
 export type AuthSession = {
   accessToken: string;
   refreshToken: string;
@@ -63,7 +65,7 @@ export function hasPermission(session: AuthSession | null, permission: string) {
 }
 
 async function refreshSession(session: AuthSession): Promise<AuthSession> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:5250"}/api/auth/refresh`, {
+  const response = await fetch(`${getApiUrl()}/api/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refreshToken: session.refreshToken }),
@@ -82,7 +84,7 @@ async function refreshSession(session: AuthSession): Promise<AuthSession> {
 export async function logout() {
   const session = getSession();
   if (session) {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:5250"}/api/auth/logout`, {
+    await fetch(`${getApiUrl()}/api/auth/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -100,7 +102,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     throw new Error("Session expired.");
   }
 
-  let response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:5250"}${path}`, {
+  let response = await fetch(`${getApiUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -111,7 +113,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
   if (response.status === 401) {
     session = await refreshSession(session);
-    response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:5250"}${path}`, {
+    response = await fetch(`${getApiUrl()}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",
