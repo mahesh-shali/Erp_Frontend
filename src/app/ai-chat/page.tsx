@@ -23,7 +23,8 @@ export default function AiChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      content: "Ask me about ERP data, like users by role, visible sidebar items, or recent records.",
+      content:
+        "Ask me about ERP data, like users by role, visible sidebar items, or recent records.",
     },
   ]);
   const [message, setMessage] = useState("");
@@ -45,7 +46,7 @@ export default function AiChatPage() {
     setMessages((current) => [...current, { role: "user", content: trimmed }]);
 
     try {
-      const response = await fetch("/api/ai-chat", {
+      const response = await fetch("/api/agent/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,10 +61,15 @@ export default function AiChatPage() {
 
       const data = (await response.json()) as ChatResponse;
       setThreadId(data.thread_id);
-      setMessages((current) => [...current, { role: "assistant", content: data.answer, sql: data.sql }]);
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", content: data.answer, sql: data.sql },
+      ]);
       touchSession();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "AI chat request failed.");
+      setError(
+        caught instanceof Error ? caught.message : "AI chat request failed.",
+      );
     } finally {
       setIsSending(false);
     }
@@ -82,7 +88,10 @@ export default function AiChatPage() {
 
         <div className="ai-chat-messages" aria-live="polite">
           {messages.map((item, index) => (
-            <article className={`ai-message ${item.role}`} key={`${item.role}-${index}`}>
+            <article
+              className={`ai-message ${item.role}`}
+              key={`${item.role}-${index}`}
+            >
               <p>{item.content}</p>
               {item.sql && (
                 <details>
@@ -103,7 +112,11 @@ export default function AiChatPage() {
             placeholder="Ask about your ERP database"
             value={message}
           />
-          <button aria-label="Send message" disabled={isSending || !message.trim()} type="submit">
+          <button
+            aria-label="Send message"
+            disabled={isSending || !message.trim()}
+            type="submit"
+          >
             <Send size={18} />
           </button>
         </form>
