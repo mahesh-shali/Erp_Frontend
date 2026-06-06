@@ -204,7 +204,7 @@ button {
 
 .nav {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
 .nav a,
@@ -241,35 +241,45 @@ button {
 
 .nav-group {
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
 .nav-children {
   display: grid;
-  gap: 4px;
+  gap: 8px;
+  margin: 4px 0 4px 12px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(217, 225, 238, 0.16);
 }
 
 .nav-level-2 {
-  padding-left: 32px;
-  min-height: 36px;
-  color: #c6d0df;
+  padding-left: 14px;
+  min-height: 38px;
+  color: #d7e0ee;
   font-size: 14px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .nav-level-3 {
-  padding-left: 48px;
+  padding-left: 28px;
   min-height: 34px;
-  color: #aebbd0;
+  color: #c0cadb;
   font-size: 13px;
 }
 
 .nav-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
   background: currentColor;
-  opacity: 0.65;
+  opacity: 0.7;
   flex: 0 0 auto;
+}
+
+.nav-level-3 .nav-dot {
+  width: 4px;
+  height: 4px;
+  opacity: 0.55;
 }
 
 .chevron {

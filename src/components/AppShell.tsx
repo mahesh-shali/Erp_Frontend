@@ -98,13 +98,44 @@ export function AppShell({ title, permission, children }: Props) {
     router.replace("/login");
   }
 
-  function toggleExpanded(id: number) {
+  function collectDescendantIds(item: SideNavItem): number[] {
+    return item.children.flatMap((child) => [child.id, ...collectDescendantIds(child)]);
+  }
+
+  function collectSiblingBranchIds(items: SideNavItem[], target: SideNavItem): number[] {
+    for (const item of items) {
+      if (item.children.some((child) => child.id === target.id)) {
+        return item.children
+          .filter((child) => child.id !== target.id)
+          .flatMap((child) => [child.id, ...collectDescendantIds(child)]);
+      }
+
+      const nested = collectSiblingBranchIds(item.children, target);
+      if (nested.length > 0) {
+        return nested;
+      }
+    }
+
+    if (target.level === 1) {
+      return items
+        .filter((item) => item.id !== target.id)
+        .flatMap((item) => [item.id, ...collectDescendantIds(item)]);
+    }
+
+    return [];
+  }
+
+  function toggleExpanded(item: SideNavItem) {
     setExpandedIds((current) => {
       const next = new Set(current);
-      if (next.has(id)) {
-        next.delete(id);
+      const siblingBranchIds = collectSiblingBranchIds(navItems, item);
+      siblingBranchIds.forEach((id) => next.delete(id));
+
+      if (next.has(item.id)) {
+        next.delete(item.id);
+        collectDescendantIds(item).forEach((id) => next.delete(id));
       } else {
-        next.add(id);
+        next.add(item.id);
       }
       return next;
     });
@@ -122,7 +153,7 @@ export function AppShell({ title, permission, children }: Props) {
           {hasChildren ? (
             <button
               className={`nav-item nav-level-${item.level}${active ? " active" : ""}`}
-              onClick={() => toggleExpanded(item.id)}
+              onClick={() => toggleExpanded(item)}
               type="button"
             >
               {item.level === 1 && <Icon size={18} />}
